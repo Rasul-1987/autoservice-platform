@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная - Платформа автосервисов{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="text-align: center; padding: 40px 20px;">
+        <h1 style="font-size: 3em; margin-bottom: 20px; color: #696969;">🚗 AutoService</h1>
+        <p style="font-size: 1.2em; color: #666; margin-bottom: 40px;">Платформа для связи клиентов и автосервисов</p>
+        
+        {% if user.is_authenticated %}
+            {% if user.client %}
+                <div style="background: linear-gradient(135deg, #28a745, #20c997); padding: 30px; border-radius: 15px; color: white; max-width: 600px; margin: 0 auto;">
+                    <h2 style="margin-bottom: 15px;">👤 Добро пожаловать, {{ user.username }}!</h2>
+                    <p style="margin-bottom: 20px;">Вы авторизованы как клиент. Создавайте заявки на ремонт и просматривайте все публичные заявки.</p>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <a href="{% url 'clients:public_repair_requests' %}" class="btn" style="background: white; color: #28a745;">📋 Все заявки</a>
+                        <a href="{% url 'clients:create_repair_request' %}" class="btn" style="background: transparent; border: 2px solid white;">➕ Создать заявку</a>
+                        <a href="{% url 'clients:autoservices_map' %}" class="btn" style="background: transparent; border: 2px solid white;">🗺️ Карта сервисов</a>
+                    </div>
+                </div>
+            {% elif user.autoservice %}
+                <div style="background: linear-gradient(135deg, #dc3545, #e83e8c); padding: 30px; border-radius: 15px; color: white; max-width: 600px; margin: 0 auto;">
+                    <h2 style="margin-bottom: 15px;">🏢 Добро пожаловать, {{ user.username }}!</h2>
+                    <p style="margin-bottom: 20px;">Вы авторизованы как автосервис. Просматривайте публичные заявки и находите клиентов.</p>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <a href="{% url 'clients:public_repair_requests' %}" class="btn" style="background: white; color: #dc3545;">📝 Публичные заявки</a>
+                        <a href="{% url 'clients:autoservices_map' %}" class="btn" style="background: transparent; border: 2px solid white;">🗺️ Карта сервисов</a>
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 800px; margin: 0 auto;">
+                <div style="background: linear-gradient(135deg, #28a745, #20c997); padding: 30px; border-radius: 15px; color: white;">
+                    <h2 style="margin-bottom: 15px;">👤 Я клиент</h2>
+                    <p style="margin-bottom: 20px;">Нужен ремонт автомобиля? Создайте заявку!</p>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <a href="{% url 'clients:register' %}" class="btn" style="background: white; color: #28a745;">Зарегистрироваться</a>
+                        <a href="{% url 'clients:login' %}" class="btn" style="background: transparent; border: 2px solid white;">Войти</a>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #dc3545, #e83e8c); padding: 30px; border-radius: 15px; color: white;">
+                    <h2 style="margin-bottom: 15px;">🏢 Я автосервис</h2>
+                    <p style="margin-bottom: 20px;">Предоставляете услуги? Найдите клиентов!</p>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <a href="{% url 'autoservices:register' %}" class="btn" style="background: white; color: #dc3545;">Зарегистрироваться</a>
+                        <a href="{% url 'autoservices:login' %}" class="btn" style="background: transparent; border: 2px solid white;">Войти</a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <div style="margin-top: 50px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+            <div style="text-align: center;">
+                <div style="font-size: 2em; margin-bottom: 10px;">📝</div>
+                <h3>Публичные заявки</h3>
+                <p>Все пользователи видят все заявки</p>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 2em; margin-bottom: 10px;">🗺️</div>
+                <h3>Карта сервисов</h3>
+                <p>Автоматическое определение местоположения</p>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 2em; margin-bottom: 10px;">⭐</div>
+                <h3>Верификация</h3>
+                <p>Только проверенные автосервисы на карте</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

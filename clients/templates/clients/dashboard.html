@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Личный кабинет клиента{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 style="margin-bottom: 30px; color: #333;">🎯 Личный кабинет клиента</h1>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+        <div style="background: #e9f7ff; padding: 25px; border-radius: 10px; position: relative;">
+            <h3 style="margin-bottom: 15px; color: #495057;">👤 Ваши данные</h3>
+            <div style="display: grid; gap: 10px;">
+                <div><strong>Имя пользователя:</strong> {{ client.user.username }}</div>
+                <div><strong>Email:</strong> {{ client.email }}</div>
+                <div><strong>Телефон:</strong> {{ client.phone }}</div>
+                <div><strong>Местоположение:</strong> {{ client.location }}</div>
+            </div>
+            <a href="{% url 'clients:edit_profile' %}" class="btn btn-primary" style="position: absolute; top: 20px; right: 20px; padding: 8px 15px;">
+                ✏️ Редактировать
+            </a>
+        </div>
+
+        <div style="background: #fff3cd; padding: 25px; border-radius: 10px; position: relative;">
+            <h3 style="margin-bottom: 15px; color: #495057;">🚗 Ваш автомобиль</h3>
+            {% if client.get_car_info != "Не указан" %}
+                <div style="display: grid; gap: 8px;">
+                    <div><strong>Марка:</strong> {{ client.car_brand|default:"Не указана" }}</div>
+                    <div><strong>Модель:</strong> {{ client.car_model|default:"Не указана" }}</div>
+                    <div><strong>Год выпуска:</strong> {{ client.car_year|default:"Не указан" }}</div>
+                    <div><strong>VIN код:</strong> {{ client.car_vin|default:"Не указан" }}</div>
+                    <div><strong>Госномер:</strong> {{ client.car_license_plate|default:"Не указан" }}</div>
+                </div>
+            {% else %}
+                <p style="margin-bottom: 15px;">Информация об автомобиле не указана</p>
+                <a href="{% url 'clients:edit_profile' %}" class="btn btn-secondary">
+                    ✏️ Добавить автомобиль
+                </a>
+            {% endif %}
+            <a href="{% url 'clients:edit_profile' %}" class="btn btn-primary" style="position: absolute; top: 20px; right: 20px; padding: 8px 15px;">
+                ✏️ Изменить
+            </a>
+        </div>
+    </div>
+
+    {% if recent_requests %}
+    <div style="margin-bottom: 30px;">
+        <h3 style="margin-bottom: 20px; color: #333;">📋 Последние заявки</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+            {% for request in recent_requests %}
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff;">
+                <div style="font-weight: bold; margin-bottom: 8px;">{{ request.title }}</div>
+                <div style="font-size: 14px; color: #666;">
+                    <span style="background: {% if request.status == 'new' %}#28a745{% elif request.status == 'in_progress' %}#007bff{% else %}#6c757d{% endif %}; 
+                              color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;">
+                        {{ request.get_status_display }}
+                    </span>
+                </div>
+                <div style="font-size: 14px; color: #666; margin: 8px 0;">
+                    Создана: {{ request.created_at|date:"d.m.Y H:i" }}
+                </div>
+                <a href="{% url 'clients:repair_request_detail' request.id %}" class="btn btn-primary" style="padding: 5px 12px; font-size: 14px;">
+                    📄 Подробнее
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div>
+        <h3 style="margin-bottom: 20px; color: #333;">🔧 Быстрые действия</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <a href="{% url 'clients:create_repair_request' %}" class="btn btn-primary">➕ Создать заявку</a>
+            <a href="{% url 'clients:repair_requests' %}" class="btn btn-secondary">📋 Мои заявки</a>
+            <a href="{% url 'clients:public_repair_requests' %}" class="btn btn-primary">📝 Все заявки</a>
+            <a href="{% url 'clients:autoservices_map' %}" class="btn btn-secondary">🗺️ Карта автосервисов</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #5a6fd8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+</style>
+{% endblock %}

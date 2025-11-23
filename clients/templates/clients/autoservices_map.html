@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}Карта автосервисов{% endblock %}
+
+{% block content %}
+<div style="position: relative; height: calc(100vh - 150px);">
+
+    <div id="map" style="width: 100%; height: 100%;"></div>
+
+    <div class="filters" style="position: absolute; top: 10px; right: 10px; z-index: 1000; background: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+        <h3 style="margin-top: 0; margin-bottom: 10px;">🔧 Фильтры</h3>
+        <div style="margin-bottom: 10px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Тип верификации:</label>
+            <select id="verification-filter" style="width: 100%; padding: 5px;">
+                <option value="all">Все</option>
+                <option value="basic">Базовая</option>
+                <option value="premium">Премиум</option>
+                <option value="verified">Верифицированные</option>
+            </select>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Услуги:</label>
+            <input type="text" id="services-filter" placeholder="Поиск по услугам..." style="width: 100%; padding: 5px;">
+        </div>
+        <button onclick="applyFilters()" style="width: 100%; padding: 8px; margin-bottom: 5px; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">Применить</button>
+        <button onclick="resetFilters()" style="width: 100%; padding: 8px; background: #6c757d; color: white; border: none; border-radius: 3px; cursor: pointer;">Сбросить</button>
+        <button onclick="locateUser()" style="width: 100%; padding: 8px; margin-top: 10px; background: #28a745; color: white; border: none; border-radius: 3px; cursor: pointer;">📍 Мое местоположение</button>
+    </div>
+</div>
+
+<script src="https://api-maps.yandex.ru/2.1/?apikey=ваш_api_ключ&lang=ru_RU" type="text/javascript"></script>
+<script>
+    let map;
+    let objectManager;
+    let allAutoservices = [];
+    let userLocation = null;
+
+    // Инициализация карты
+    ymaps.ready(init);
+
+    function init() {
+        map = new ymaps.Map('map', {
+            center: [55.76, 37.64], // Москва по умолчанию
+            zoom: 10
+        });
+
+        objectManager = new ymaps.ObjectManager({
+            clusterize: true,
+            gridSize: 32,
+            clusterDisableClickZoom: true
+        });
+
+        objectManager.objects.options.set('preset', 'islands#blueAutoIcon');
+        objectManager.clusters.options.set('preset', 'islands#blueClusterIcons');
+        map.geoObjects.add(objectManager);
+
+        // Автоматическое определение местоположения при загрузке
+        locateUser();
+
+        // Загрузка данных автосервисов
+        loadAutoservices();
+    }
+
+    function loadAutoservices() {
+        // Здесь должен быть AJAX запрос к вашему API
+        // Временно используем тестовые данные
+        const testData = [
+            {
+                id: 1,
+                name: "Автосервис №1",
+                services: "Шиномонтаж, ремонт двигателя",
+                phone: "+7 (999) 123-45-67",
+                address: "Москва, ул. Примерная, 1",
+                lat: 37.6173,
+                lon: 55.7558,
+                verification_type: "Верифицированный",
+                verification_color: "verified"
+            },
+            {
+                id: 2,
+                name: "СТО Премиум",
+                services: "Диагностика, кузовной ремонт",
+                phone: "+7 (999) 123-45-68",
+                address: "Москва, ул. Тестовая, 15",
+                lat: 37.6178,
+                lon: 55.7517,
+                verification_type: "Премиум",
+                verification_color: "premium"
+            }
+        ];
+
+        allAutoservices = testData;
+        displayAutoservices(testData);
+    }
+
+    function displayAutoservices(autoservices) {
+        const features = autoservices.map(service => ({
+            type: 'Feature',
+            id: service.id,
+            geometry: {
+                type: 'Point',
+                coordinates: [service.lon, service.lat]
+            },
+            properties: {
+                balloonContent: `
+                    <div style="max-width: 250px;">
+                        <div style="font-weight: bold; margin-bottom: 5px;">${service.name}</div>
+                        <div style="margin: 5px 0;">📞 ${service.phone}</div>
+                        <div style="margin: 5px 0;">📍 ${service.address}</div>
+                        <div style="margin: 5px 0;">🔧 ${service.services}</div>
+                        <div style="margin: 5px 0;">
+                            Статус: ${service.verification_type}
+                            <span style="display: inline-block; padding: 2px 8px; border-radius: 3px; color: white; font-size: 12px; margin-left: 5px; background: 
+                                ${service.verification_color === 'basic' ? '#6c757d' : 
+                                  service.verification_color === 'premium' ? '#007bff' : '#28a745'}">
+                                ${service.verification_type}
+                            </span>
+                        </div>
+                    </div>
+                `,
+                clusterCaption: service.name,
+                hintContent: service.name
+            }
+        }));
+
+        objectManager.removeAll();
+        if (features.length > 0) {
+            objectManager.add({
+                type: 'FeatureCollection',
+                features: features
+            });
+
+            // Автоматическое подстраивание карты под метки
+            const bounds = objectManager.getBounds();
+            if (bounds) {
+                map.setBounds(bounds, { checkZoomRange: true });
+            }
+        }
+    }
+
+    function applyFilters() {
+        const verificationFilter = document.getElementById('verification-filter').value;
+        const servicesFilter = document.getElementById('services-filter').value.toLowerCase();
+
+        const filtered = allAutoservices.filter(service => {
+            const matchesVerification = verificationFilter === 'all' || service.verification_color === verificationFilter;
+            const matchesServices = service.services.toLowerCase().includes(servicesFilter);
+            return matchesVerification && matchesServices;
+        });
+
+        displayAutoservices(filtered);
+    }
+
+    function resetFilters() {
+        document.getElementById('verification-filter').value = 'all';
+        document.getElementById('services-filter').value = '';
+        displayAutoservices(allAutoservices);
+    }
+
+    // Определение местоположения пользователя
+    function locateUser() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    userLocation = [position.coords.latitude, position.coords.longitude];
+                    map.setCenter(userLocation, 15);
+                    
+                    // Добавляем метку пользователя
+                    const userPlacemark = new ymaps.Placemark(userLocation, {
+                        balloonContent: 'Ваше местоположение'
+                    }, {
+                        preset: 'islands#greenDotIcon',
+                        draggable: false
+                    });
+                    
+                    map.geoObjects.add(userPlacemark);
+                },
+                error => {
+                    console.log('Geolocation error:', error);
+                    alert('Не удалось определить ваше местоположение. Проверьте настройки геолокации в браузере.');
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000
+                }
+            );
+        } else {
+            alert('Ваш браузер не поддерживает геолокацию');
+        }
+    }
+
+    // Добавляем кнопку определения местоположения в управление картой
+    map.controls.add(new ymaps.control.GeolocationControl());
+</script>
+{% endblock %}

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    {% extends 'base.html' %}
+
+{% block title %}Публичные заявки на ремонт{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 style="margin-bottom: 30px; color: #333;">📋 Публичные заявки на ремонт</h1>
+
+    {% if repair_requests %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+            {% for request in repair_requests %}
+            <div style="background: white; border: 2px solid #e9ecef; border-radius: 12px; padding: 20px; transition: all 0.3s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                    <h3 style="margin: 0; color: #333; flex: 1; font-size: 18px;">{{ request.title }}</h3>
+                    <span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: #d4edda; color: #155724;">
+                        Новая
+                    </span>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 14px; color: #666; margin-bottom: 8px;">
+                        <strong>Клиент:</strong> {{ request.client.user.username }}
+                    </div>
+                    <div style="font-size: 14px; color: #666; margin-bottom: 8px;">
+                        <strong>Автомобиль:</strong> {{ request.client.get_car_info }}
+                    </div>
+                    <div style="font-size: 14px; color: #666; margin-bottom: 8px;">
+                        <strong>Создана:</strong> {{ request.created_at|date:"d.m.Y H:i" }}
+                    </div>
+                    <div style="font-size: 14px; color: #333; margin-bottom: 8px; line-height: 1.4;">
+                        {{ request.description|truncatewords:25 }}
+                    </div>
+                    {% if request.desired_price %}
+                    <div style="font-size: 18px; font-weight: bold; color: #28a745;">
+                        {{ request.desired_price }} руб.
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if request.photo %}
+                <div style="margin-bottom: 12px;">
+                    <img src="{{ request.photo.url }}" alt="Фото проблемы" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px;">
+                </div>
+                {% endif %}
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" style="flex: 1; text-align: center; padding: 8px;" onclick="alert('Функция принятия заявки')">
+                        ✅ Принять заявку
+                    </button>
+                    <button class="btn btn-secondary" style="flex: 1; text-align: center; padding: 8px;" onclick="alert('Функция связи с клиентом')">
+                        💬 Связаться
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 60px 20px;">
+            <div style="font-size: 4em; margin-bottom: 20px;">📭</div>
+            <h2 style="color: #666; margin-bottom: 15px;">Нет доступных заявок</h2>
+            <p style="color: #999; margin-bottom: 30px;">В данный момент нет новых заявок на ремонт</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+</body>
+</html>

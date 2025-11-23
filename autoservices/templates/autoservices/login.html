@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Вход для автосервиса</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #c82333; }
+        .error { color: red; }
+        .nav { margin-bottom: 20px; }
+        .nav a { margin-right: 15px; text-decoration: none; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="/">Главная</a>
+        <a href="{% url 'clients:client_list' %}">Клиенты</a>
+        <a href="{% url 'autoservices:autoservice_list' %}">Автосервисы</a>
+    </div>
+
+    <h2>🔐 Вход для автосервиса</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="error">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="username">Имя пользователя:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Пароль:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit">Войти</button>
+    </form>
+
+    <p style="margin-top: 20px;">
+        Нет аккаунта? <a href="{% url 'autoservices:register' %}">Зарегистрироваться</a>
+    </p>
+    <p>
+        Вы клиент? <a href="{% url 'clients:login' %}">Войти здесь</a>
+    </p>
+</body>
+</html>

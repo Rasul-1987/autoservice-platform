@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Создать заявку на ремонт</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .nav { background: #f4f4f4; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .nav a { margin-right: 15px; text-decoration: none; color: #333; font-weight: bold; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        textarea { resize: vertical; min-height: 100px; }
+        .btn { background: #007bff; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        .btn:hover { background: #0056b3; }
+        .error { color: #dc3545; font-size: 14px; margin-top: 5px; }
+        .success { color: #28a745; font-size: 14px; margin-bottom: 15px; }
+        .photo-preview { max-width: 200px; margin-top: 10px; border-radius: 5px; }
+        .form-section { background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        .form-section h3 { margin-top: 0; color: #495057; }
+    </style>
+</head>
+<body>
+{% extends 'base.html' %}
+
+{% block title %}Создать заявку на ремонт{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 style="margin-bottom: 30px; color: #333;">📝 Создать заявку на ремонт</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div style="display: grid; gap: 25px;">
+            <div style="background: #e7f3ff; padding: 20px; border-radius: 10px; border-left: 4px solid #007bff;">
+                <h3 style="margin-bottom: 10px; color: #007bff;">ℹ️ Информация</h3>
+                <p style="color: #666; margin: 0;">Ваша заявка будет опубликована и доступна всем автосервисам на платформе.</p>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 10px;">
+                <h3 style="margin-bottom: 15px; color: #495057;">📋 Описание проблемы</h3>
+                <div style="display: grid; gap: 15px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
+                            {{ form.title.label }}
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div style="color: #dc3545; font-size: 14px; margin-top: 5px;">
+                                {{ form.title.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
+                            {{ form.description.label }}
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div style="color: #dc3545; font-size: 14px; margin-top: 5px;">
+                                {{ form.description.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 10px;">
+                <h3 style="margin-bottom: 15px; color: #495057;">💰 Стоимость и фото</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
+                            {{ form.desired_price.label }}
+                        </label>
+                        {{ form.desired_price }}
+                        {% if form.desired_price.errors %}
+                            <div style="color: #dc3545; font-size: 14px; margin-top: 5px;">
+                                {{ form.desired_price.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
+                            {{ form.photo.label }}
+                        </label>
+                        {{ form.photo }}
+                        {% if form.photo.errors %}
+                            <div style="color: #dc3545; font-size: 14px; margin-top: 5px;">
+                                {{ form.photo.errors }}
+                            </div>
+                        {% endif %}
+                        <div id="photo-preview" style="margin-top: 10px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 30px; padding: 15px;">
+            📢 Опубликовать заявку
+        </button>
+    </form>
+</div>
+
+<style>
+    input, select, textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+</style>
+
+<script>
+    // Предпросмотр фото
+    document.getElementById('{{ form.photo.id_for_label }}').addEventListener('change', function(e) {
+        const preview = document.getElementById('photo-preview');
+        preview.innerHTML = '';
+
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.maxWidth = '200px';
+                img.style.borderRadius = '8px';
+                img.style.marginTop = '10px';
+                preview.appendChild(img);
+            }
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+</script>
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Заявка #{{ repair_request.id }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .nav { background: #f4f4f4; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .nav a { margin-right: 15px; text-decoration: none; color: #333; font-weight: bold; }
+        .request-header { border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
+        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+        .status-new { background: #d4edda; color: #155724; }
+        .status-in_progress { background: #fff3cd; color: #856404; }
+        .status-completed { background: #e2e3e5; color: #383d41; }
+        .status-cancelled { background: #f8d7da; color: #721c24; }
+        .info-section { margin-bottom: 25px; }
+        .info-section h3 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .info-row { display: flex; margin-bottom: 10px; }
+        .info-label { font-weight: bold; width: 200px; color: #666; }
+        .info-value { flex: 1; }
+        .photo-container { text-align: center; margin-top: 20px; }
+        .photo { max-width: 100%; max-height: 400px; border-radius: 8px; }
+        .price { font-size: 24px; font-weight: bold; color: #28a745; }
+        .no-photo { color: #999; font-style: italic; }
+    </style>
+</head>
+<body>
+
+
+{% block title %}Заявка #{{ repair_request.id }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 30px;">
+        <h1 style="color: #333; margin-bottom: 10px;">Заявка #{{ repair_request.id }}: {{ repair_request.title }}</h1>
+        <span style="padding: 8px 16px; border-radius: 20px; font-weight: bold;
+                    {% if repair_request.status == 'new' %}background: #d4edda; color: #155724;
+                    {% elif repair_request.status == 'in_progress' %}background: #fff3cd; color: #856404;
+                    {% elif repair_request.status == 'completed' %}background: #e2e3e5; color: #383d41;
+                    {% else %}background: #f8d7da; color: #721c24;{% endif %}">
+            {{ repair_request.get_status_display }}
+        </span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+        <div style="background: #e9f7ff; padding: 20px; border-radius: 10px;">
+            <h3 style="margin-bottom: 15px; color: #495057;">📋 Основная информация</h3>
+            <div style="display: grid; gap: 10px;">
+                <div><strong>Клиент:</strong> {{ repair_request.client.user.username }}</div>
+                <div><strong>Автомобиль:</strong> {{ repair_request.client.get_car_info }}</div>
+                <div><strong>Дата создания:</strong> {{ repair_request.created_at|date:"d.m.Y H:i" }}</div>
+                <div><strong>Последнее обновление:</strong> {{ repair_request.updated_at|date:"d.m.Y H:i" }}</div>
+            </div>
+        </div>
+
+        <div style="background: #fff3cd; padding: 20px; border-radius: 10px;">
+            <h3 style="margin-bottom: 15px; color: #495057;">💰 Стоимость</h3>
+            {% if repair_request.desired_price %}
+                <div style="font-size: 24px; font-weight: bold; color: #28a745;">
+                    {{ repair_request.desired_price }} руб.
+                </div>
+            {% else %}
+                <div style="color: #666;">Стоимость не указана</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; margin-bottom: 30px;">
+        <h3 style="margin-bottom: 15px; color: #495057;">🚗 Описание проблемы</h3>
+        <div style="line-height: 1.6; color: #333; white-space: pre-line;">
+            {{ repair_request.description }}
+        </div>
+    </div>
+
+    {% if repair_request.photo %}
+    <div style="text-align: center;">
+        <h3 style="margin-bottom: 15px; color: #495057;">📷 Фото проблемы</h3>
+        <img src="{{ repair_request.photo.url }}" alt="Фото проблемы"
+             style="max-width: 100%; max-height: 400px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+    </div>
+    {% endif %}
+</div>
+
+</body>
+</html>
+{% endblock %}

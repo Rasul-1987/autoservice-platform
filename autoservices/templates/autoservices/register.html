@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Регистрация автосервиса</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #c82333; }
+        .error { color: red; font-size: 14px; }
+        .success { color: green; font-size: 14px; }
+        .nav { margin-bottom: 20px; }
+        .nav a { margin-right: 15px; text-decoration: none; color: #333; }
+        .helptext { font-size: 12px; color: #666; margin-top: 5px; }
+        #map { height: 300px; margin: 15px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .map-instructions { background: #e7f3ff; padding: 10px; border-radius: 4px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="/">Главная</a>
+        <a href="{% url 'clients:client_list' %}">Клиенты</a>
+        <a href="{% url 'autoservices:autoservice_list' %}">Автосервисы</a>
+    </div>
+
+    <h2>🏢 Регистрация автосервиса</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="{% if message.tags == 'error' %}error{% else %}success{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" id="registration-form">
+        {% csrf_token %}
+
+        <div class="map-instructions">
+            <strong>🗺️ Укажите местоположение автосервиса:</strong>
+            <p>Введите адрес в поле ниже и выберите точное местоположение на карте. Это поможет клиентам найти вас!</p>
+        </div>
+
+        {% for field in form %}
+            {% if field.name != 'latitude' and field.name != 'longitude' %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <div class="helptext">{{ field.help_text }}</div>
+                {% endif %}
+                {% if field.errors %}
+                    <div class="error">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% endfor %}
+
+        <!-- Скрытые поля для координат -->
+        {{ form.latitude }}
+        {{ form.longitude }}
+
+        <div id="map"></div>
+        <div id="coordinates" style="margin: 10px 0; font-size: 14px; color: #666;">
+            Координаты: не указаны
+        </div>
+
+        <button type="submit">Зарегистрировать автосервис</button>
+    </form>
+
+    <p style="margin-top: 20px;">
+        Уже есть аккаунт? <a href="{% url 'autoservices:login' %}">Войти</a>
+    </p>
+    <p>
+        Вы клиент? <a href="{% url 'clients:register' %}">Зарегистрируйтесь здесь</a>
+    </p>
+
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=your_api_key&lang=ru_RU" type="text/javascript"></script>
+    <script>
+        let map;
+        let placemark;
+
+        ymaps.ready(init);
+
+        function init() {
+            map = new ymaps.Map('map', {
+                center: [55.76, 37.64],
+                zoom: 10
+            });
+
+            // Поиск по адресу
+            const addressInput = document.getElementById('address-input');
+            addressInput.addEventListener('change', function() {
+                geocodeAddress(this.value);
+            });
+
+            // Обработчик клика по карте
+            map.events.add('click', function (e) {
+                const coords = e.get('coords');
+
+                // Обновляем скрытые поля
+                document.getElementById('id_latitude').value = coords[0].toPrecision(6);
+                document.getElementById('id_longitude').value = coords[1].toPrecision(6);
+
+                // Обновляем отображение координат
+                document.getElementById('coordinates').textContent =
+                    `Координаты: ${coords[0].toPrecision(6)}, ${coords[1].toPrecision(6)}`;
+
+                // Устанавливаем метку
+                if (placemark) {
+                    map.geoObjects.remove(placemark);
+                }
+
+                placemark = new ymaps.Placemark(coords, {
+                    balloonContent: 'Местоположение автосервиса'
+                }, {
+                    preset: 'islands#redAutoIcon'
+                });
+
+                map.geoObjects.add(placemark);
+                map.setCenter(coords, 15);
+            });
+        }
+
+        function geocodeAddress(address) {
+            ymaps.geocode(address).then(function (res) {
+                const firstGeoObject = res.geoObjects.get(0);
+                const coords = firstGeoObject.geometry.getCoordinates();
+
+                map.setCenter(coords, 15);
+
+                // Устанавливаем метку
+                if (placemark) {
+                    map.geoObjects.remove(placemark);
+                }
+
+                placemark = new ymaps.Placemark(coords, {
+                    balloonContent: firstGeoObject.getAddress()
+                }, {
+                    preset: 'islands#redAutoIcon'
+                });
+
+                map.geoObjects.add(placemark);
+
+                // Обновляем координаты
+                document.getElementById('id_latitude').value = coords[0].toPrecision(6);
+                document.getElementById('id_longitude').value = coords[1].toPrecision(6);
+                document.getElementById('coordinates').textContent =
+                    `Координаты: ${coords[0].toPrecision(6)}, ${coords[1].toPrecision(6)}`;
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+
+{% block title %}Редактирование профиля - AutoService{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 style="margin-bottom: 25px; color: #333;">✏️ Редактирование профиля</h1>
+
+    <form method="post" enctype="multipart/form-data" id="profileForm">
+        {% csrf_token %}
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+            <div>
+                <h3 style="margin-bottom: 20px; color: #495057; border-bottom: 2px solid #e9f7ff; padding-bottom: 10px;">👤 Контактная информация</h3>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Телефон:</label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}
+                        <div style="color: #dc3545; font-size: 14px; margin-top: 5px;">{{ form.phone.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Email:</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div style="color: #dc3545; font-size: 14px; margin-top: 5px;">{{ form.email.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div>
+                <h3 style="margin-bottom: 20px; color: #495057; border-bottom: 2px solid #fff3cd; padding-bottom: 10px;">📍 Местоположение</h3>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Местоположение:</label>
+                    {{ form.location }}
+                    <small style="color: #666;">Адрес будет определен автоматически</small>
+                </div>
+
+                <div style="background: #e9f7ff; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h4 style="margin-top: 0; margin-bottom: 10px;">📍 Автоматическое определение</h4>
+                    <button type="button" id="getLocationBtn" class="btn btn-primary" style="margin-bottom: 10px;">
+                        🎯 Определить мое местоположение
+                    </button>
+                    <div id="locationStatus" style="font-size: 14px; color: #666;">
+                        Нажмите кнопку для определения вашего местоположения
+                    </div>
+                </div>
+
+                <!-- Мини-карта для отображения местоположения -->
+                <div id="map" style="height: 200px; width: 100%; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 15px; display: none;"></div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            <h3 style="margin-bottom: 20px; color: #495057; border-bottom: 2px solid #e9f7ff; padding-bottom: 10px;">🚗 Информация об автомобиле</h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Марка автомобиля:</label>
+                    {{ form.car_brand }}
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Модель автомобиля:</label>
+                    {{ form.car_model }}
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Год выпуска:</label>
+                    {{ form.car_year }}
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">VIN код:</label>
+                    {{ form.car_vin }}
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Госномер:</label>
+                    {{ form.car_license_plate }}
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 15px; border-top: 1px solid #eee; padding-top: 25px;">
+            <button type="submit" class="btn btn-primary" style="padding: 12px 30px;">
+                💾 Сохранить изменения
+            </button>
+            <a href="{% url 'clients:dashboard' %}" class="btn btn-secondary" style="padding: 12px 30px;">
+                ❌ Отмена
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Подключаем API Яндекс.Карт -->
+<script src="https://api-maps.yandex.ru/2.1/?apikey=ваш_api_ключ&lang=ru_RU" type="text/javascript"></script>
+
+<script>
+// Тот же JavaScript код что и в регистрации
+document.addEventListener('DOMContentLoaded', function() {
+    const getLocationBtn = document.getElementById('getLocationBtn');
+    const locationStatus = document.getElementById('locationStatus');
+    const locationField = document.getElementById('id_location');
+    const mapContainer = document.getElementById('map');
+
+    let map, placemark;
+
+    function updateLocationStatus(message, isError = false) {
+        locationStatus.innerHTML = message;
+        locationStatus.style.color = isError ? '#dc3545' : '#28a745';
+    }
+
+    function initMap(center) {
+        if (!map) {
+            ymaps.ready(function() {
+                map = new ymaps.Map('map', {
+                    center: center,
+                    zoom: 15,
+                    controls: ['zoomControl', 'typeSelector']
+                });
+
+                placemark = new ymaps.Placemark(center, {}, {
+                    preset: 'islands#blueAutoIcon',
+                    draggable: true
+                });
+
+                map.geoObjects.add(placemark);
+
+                placemark.events.add('dragend', function () {
+                    const coords = placemark.geometry.getCoordinates();
+                    getAddressByCoords(coords);
+                });
+
+                map.events.add('click', function (e) {
+                    const coords = e.get('coords');
+                    placemark.geometry.setCoordinates(coords);
+                    getAddressByCoords(coords);
+                });
+            });
+        } else {
+            map.setCenter(center);
+            placemark.geometry.setCoordinates(center);
+        }
+
+        mapContainer.style.display = 'block';
+    }
+
+    function getAddressByCoords(coords) {
+        ymaps.geocode(coords).then(function (res) {
+            const firstGeoObject = res.geoObjects.get(0);
+            const address = firstGeoObject.getAddressLine();
+
+            locationField.value = address;
+            updateLocationStatus(`✅ Местоположение определено: ${address}`);
+        });
+    }
+
+    function getCurrentLocation() {
+        updateLocationStatus('🔄 Определяем местоположение...');
+
+        if (!navigator.geolocation) {
+            updateLocationStatus('❌ Ваш браузер не поддерживает геолокацию', true);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const coords = [lat, lng];
+
+                initMap(coords);
+                getAddressByCoords(coords);
+            },
+            function(error) {
+                let errorMessage = '❌ Не удалось определить местоположение';
+
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage = '❌ Доступ к геолокации запрещен. Разрешите доступ в настройках браузера';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage = '❌ Информация о местоположении недоступна';
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage = '❌ Время ожидания определения местоположения истекло';
+                        break;
+                }
+
+                updateLocationStatus(errorMessage, true);
+                initMap([55.7558, 37.6173]);
+                updateLocationStatus('📍 Укажите ваше местоположение на карте');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 60000
+            }
+        );
+    }
+
+    getLocationBtn.addEventListener('click', getCurrentLocation);
+
+    // Автозаполнение при вводе адреса
+    let suggestTimeout;
+    locationField.addEventListener('input', function() {
+        clearTimeout(suggestTimeout);
+
+        if (this.value.length > 2) {
+            suggestTimeout = setTimeout(() => {
+                updateLocationStatus('🔄 Ищем адрес...');
+
+                ymaps.suggest(this.value).then(function(items) {
+                    if (items && items.length > 0) {
+                        updateLocationStatus('✅ Выберите адрес из предложенных');
+
+                        ymaps.geocode(items[0].value).then(function(res) {
+                            const firstGeoObject = res.geoObjects.get(0);
+                            const coords = firstGeoObject.geometry.getCoordinates();
+
+                            if (map) {
+                                map.setCenter(coords);
+                                if (placemark) {
+                                    placemark.geometry.setCoordinates(coords);
+                                }
+                            } else {
+                                initMap(coords);
+                            }
+                        });
+                    }
+                });
+            }, 500);
+        }
+    });
+});
+</script>
+
+<style>
+/* Стили остаются такими же */
+    form input, form select, form textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+
+    form label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
