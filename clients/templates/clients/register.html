@@ -1,11 +1,11 @@
 
-{#{% if form.non_field_errors %}#}
-{#    <div style="color: red; background: #ffeaea; padding: 10px; border-radius: 4px; margin-bottom: 15px;">#}
-{#        {% for error in form.non_field_errors %}#}
-{#            {{ error }}<br>#}
-{#        {% endfor %}#}
-{#    </div>#}
-{#{% endif %}#}
+{% if form.non_field_errors %}
+    <div style="color: red; background: #ffeaea; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+        {% for error in form.non_field_errors %}
+            {{ error }}<br>
+        {% endfor %}
+    </div>
+{% endif %}
 
 
 {% block title %}Регистрация клиента - AutoService{% endblock %}
