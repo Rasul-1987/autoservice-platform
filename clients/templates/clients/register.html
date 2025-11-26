@@ -1,4 +1,12 @@
 
+{#{% if form.non_field_errors %}#}
+{#    <div style="color: red; background: #ffeaea; padding: 10px; border-radius: 4px; margin-bottom: 15px;">#}
+{#        {% for error in form.non_field_errors %}#}
+{#            {{ error }}<br>#}
+{#        {% endfor %}#}
+{#    </div>#}
+{#{% endif %}#}
+
 
 {% block title %}Регистрация клиента - AutoService{% endblock %}
 
@@ -23,12 +31,18 @@
                 
                 <div style="margin-bottom: 15px;">
                     <label>Пароль *:</label>
-                    {{ form.password }}
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                        <div style="color: red; font-size: 14px;">{{ form.password1.errors }}</div>
+                    {% endif %}
                 </div>
-                
+
                 <div style="margin-bottom: 15px;">
                     <label>Подтверждение пароля *:</label>
-                    {{ form.password_confirm }}
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                        <div style="color: red; font-size: 14px;">{{ form.password2.errors }}</div>
+                    {% endif %}
                 </div>
                 
                 <div style="margin-bottom: 15px;">
@@ -107,7 +121,7 @@
 </div>
 
 <!-- Подключаем API Яндекс.Карт -->
-<script src="https://api-maps.yandex.ru/2.1/?apikey=ваш_api_ключ&lang=ru_RU" type="text/javascript"></script>
+<script src="https://api-maps.yandex.ru/2.1/?apikey=265904e6-0ebe-4652-889e-0cc2d19bf270&lang=ru_RU" type="text/javascript"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
