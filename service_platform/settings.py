@@ -126,11 +126,11 @@ STATIC_URL = '/static/'
 
 # Дополнительные папки со статическими файлами
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    os.path.join(BASE_DIR, 'static'),
 ]
 
 # Папка для сбора статики при deploy (python manage.py collectstatic)
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Media files (загружаемые пользователями)
 MEDIA_URL = '/media/'

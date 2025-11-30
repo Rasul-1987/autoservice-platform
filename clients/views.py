@@ -192,3 +192,30 @@ def edit_profile(request):
         'form': form,
         'client': client
     })
+
+
+@login_required
+def delete_repair_request(request, request_id):
+    """Удаление заявки на ремонт (без подтверждения)"""
+    try:
+        client = Client.objects.get(user=request.user)
+        repair_request = get_object_or_404(RepairRequest, id=request_id)
+
+        # Проверяем, что заявка принадлежит текущему клиенту
+        if repair_request.client != client:
+            messages.error(request, 'У вас нет прав для удаления этой заявки')
+            return redirect('clients:repair_requests')
+
+        # Сохраняем информацию для сообщения
+        request_title = repair_request.title
+        # Удаляем заявку
+        repair_request.delete()
+        messages.success(request, f'Заявка "{request_title}" успешно удалена')
+        return redirect('clients:repair_requests')
+
+    except Client.DoesNotExist:
+        messages.error(request, 'Доступ запрещен')
+        return redirect('home')
+    except RepairRequest.DoesNotExist:
+        messages.error(request, 'Заявка не найдена')
+        return redirect('clients:repair_requests')

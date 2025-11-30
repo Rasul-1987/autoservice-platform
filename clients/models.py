@@ -61,7 +61,15 @@ class RepairRequest(models.Model):
     def __str__(self):
         return f"Заявка #{self.id} - {self.title}"
 
-    class Meta:
-        verbose_name = 'Заявка на ремонт'
-        verbose_name_plural = 'Заявки на ремонт'
-        ordering = ['-created_at']
+
+    def get_photo_url(self):
+        """Возвращает URL фотографии или None если фото нет"""
+        if self.photo and hasattr(self.photo, 'url'):
+            return self.photo.url
+        return None
+
+
+class Meta:
+    verbose_name = 'Заявка на ремонт'
+    verbose_name_plural = 'Заявки на ремонт'
+    ordering = ['-created_at']

@@ -18,6 +18,7 @@ urlpatterns = [
     path('repair-requests/<int:request_id>/', views.repair_request_detail, name='repair_request_detail'),
     path('public-requests/', views.public_repair_requests, name='public_repair_requests'),
     path('<int:client_id>/', views.client_detail, name='client_detail'),
+    path('repair-requests/<int:request_id>/delete/', views.delete_repair_request, name='delete_repair_request'),
 ]
 
 if settings.DEBUG:
