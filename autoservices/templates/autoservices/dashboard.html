@@ -1,6 +1,10 @@
+
 <!DOCTYPE html>
+
 <html>
+
 <head>
+    
     <title>Личный кабинет автосервиса</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
@@ -34,7 +38,9 @@
         }
     </style>
 </head>
+
 <body>
+
     <div class="nav">
         <!-- ИСПРАВЛЕННОЕ КЛИКАБЕЛЬНОЕ ИМЯ АВТОСЕРВИСА -->
         <span>🏢
@@ -93,13 +99,8 @@
         </div>
 
         <div class="actions">
-            <h3>Доступные действия:</h3>
             <a href="{% url 'clients:public_repair_requests' %}" class="btn btn-primary">📝 Публичные заявки</a>
-            <a href="{% url 'autoservices:edit_profile' %}" class="btn btn-secondary">⚙️ Настройки профиля</a>
-            <button onclick="alert('Управление каталогом услуг')" class="btn btn-primary">📁 Управление каталогом</button>
             <button onclick="alert('Поддержка')" class="btn btn-secondary">💬 Обратиться в поддержку</button>
-            <button onclick="alert('Регистрация новых услуг')" class="btn btn-primary">📝 Зарегистрировать услугу</button>
-            <button onclick="alert('Повышение уровня верификации')" class="btn btn-success">✅ Повысить верификацию</button>
             <button onclick="alert('Просмотр заказов')" class="btn btn-secondary">📋 Просмотреть заказы</button>
         </div>
     </div>

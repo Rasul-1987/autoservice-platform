@@ -3,7 +3,7 @@
 <head>
     <title>Регистрация автосервиса</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
@@ -19,12 +19,6 @@
     </style>
 </head>
 <body>
-    <div class="nav">
-        <a href="/">Главная</a>
-        <a href="{% url 'clients:client_list' %}">Клиенты</a>
-        <a href="{% url 'autoservices:autoservice_list' %}">Автосервисы</a>
-    </div>
-
     <h2>🏢 Регистрация автосервиса</h2>
 
     {% if messages %}
@@ -77,7 +71,7 @@
         Вы клиент? <a href="{% url 'clients:register' %}">Зарегистрируйтесь здесь</a>
     </p>
 
-    <script src="https://api-maps.yandex.ru/2.1/?apikey=your_api_key&lang=ru_RU" type="text/javascript"></script>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=265904e6-0ebe-4652-889e-0cc2d19bf270&lang=ru_RU" type="text/javascript"></script>
     <script>
         let map;
         let placemark;

@@ -249,7 +249,7 @@
                         <li><a href="{% url 'clients:autoservices_map' %}"><span class="nav-icon">🗺️</span>Карта сервисов</a></li>
                     {% elif user.autoservice %}
                         <!-- Навигация для автосервисов -->
-                        <li><a href="{% url 'clients:public_repair_requests' %}"><span class="nav-icon">📝</span>Публичные заявки</a></li>
+                        <li><a href="{% url 'clients:public_repair_requests' %}"><span class="nav-icon">📝</span>Все заявки</a></li>
                         <li><a href="{% url 'clients:autoservices_map' %}"><span class="nav-icon">🗺️</span>Карта сервисов</a></li>
                     {% endif %}
                 {% else %}
