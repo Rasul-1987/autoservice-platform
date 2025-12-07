@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}Мои чаты{% endblock %}
 
@@ -16,11 +16,11 @@
     {% if chat_rooms %}
         <div style="display: flex; flex-direction: column; gap: 15px;">
             {% for chat in chat_rooms %}
-            <a href="{% url 'chat:chat_detail' chat.id %}"
+            <a href="{% url 'chat:chat_detail' chat.id %}" 
                style="text-decoration: none; color: inherit;">
-                <div style="background: #f8f9fa; border-radius: 10px; padding: 20px;
+                <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; 
                           border-left: 4px solid #667eea; transition: all 0.3s ease;
-                          border: 1px solid #e9ecef; hover:background: #e9ecef;">
+                          border: 1px solid #e9ecef;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h3 style="margin: 0 0 10px 0; color: #333;">
@@ -46,8 +46,8 @@
                                 {{ chat.updated_at|date:"d.m.Y H:i" }}
                             </div>
                             {% if chat.unread_count %}
-                                <span style="background: #dc3545; color: white; padding: 4px 10px;
-                                           border-radius: 12px; font-size: 12px; font-weight: bold;
+                                <span style="background: #dc3545; color: white; padding: 4px 10px; 
+                                           border-radius: 12px; font-size: 12px; font-weight: bold; 
                                            display: inline-block; min-width: 20px; text-align: center;">
                                     {{ chat.unread_count }}
                                 </span>
