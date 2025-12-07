@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Мои чаты{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h1 style="margin: 0; color: #333;">💬 Мои чаты</h1>
+        {% if user.autoservice %}
+            <a href="{% url 'clients:public_repair_requests' %}" class="btn btn-secondary">
+                ← Назад к заявкам
+            </a>
+        {% endif %}
+    </div>
+
+    {% if chat_rooms %}
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            {% for chat in chat_rooms %}
+            <a href="{% url 'chat:chat_detail' chat.id %}"
+               style="text-decoration: none; color: inherit;">
+                <div style="background: #f8f9fa; border-radius: 10px; padding: 20px;
+                          border-left: 4px solid #667eea; transition: all 0.3s ease;
+                          border: 1px solid #e9ecef; hover:background: #e9ecef;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3 style="margin: 0 0 10px 0; color: #333;">
+                                {% if user.client %}
+                                    🏢 Автосервис: {{ chat.autoservice.user.username }}
+                                {% else %}
+                                    👤 Клиент: {{ chat.client.user.username }}
+                                {% endif %}
+                            </h3>
+                            <div style="color: #666; font-size: 14px; margin-bottom: 5px;">
+                                {% if chat.repair_request %}
+                                    📋 По заявке: {{ chat.repair_request.title }}
+                                {% else %}
+                                    💬 Общий чат
+                                {% endif %}
+                            </div>
+                            <div style="color: #888; font-size: 12px;">
+                                Создан: {{ chat.created_at|date:"d.m.Y H:i" }}
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="color: #999; font-size: 12px; margin-bottom: 5px;">
+                                {{ chat.updated_at|date:"d.m.Y H:i" }}
+                            </div>
+                            {% if chat.unread_count %}
+                                <span style="background: #dc3545; color: white; padding: 4px 10px;
+                                           border-radius: 12px; font-size: 12px; font-weight: bold;
+                                           display: inline-block; min-width: 20px; text-align: center;">
+                                    {{ chat.unread_count }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 40px 20px;">
+            <div style="font-size: 4em; margin-bottom: 20px; color: #dee2e6;">💬</div>
+            <h3 style="color: #666; margin-bottom: 15px;">Нет активных чатов</h3>
+            <p style="color: #999;">
+                {% if user.autoservice %}
+                    Начните общение с клиентом через публичные заявки
+                {% else %}
+                    Автосервисы будут писать вам по вашим заявкам
+                {% endif %}
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -50,14 +50,13 @@
                 </div>
                 {% endif %}
 
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn btn-primary" style="flex: 1; text-align: center; padding: 8px;" onclick="alert('Функция принятия заявки')">
-                        ✅ Принять заявку
-                    </button>
-                    <button class="btn btn-secondary" style="flex: 1; text-align: center; padding: 8px;" onclick="alert('Функция связи с клиентом')">
+                {% if user.autoservice %}
+                    <a href="{% url 'chat:start_chat_from_request' request.id %}"
+                        class="btn btn-secondary"
+                        style="flex: 1; text-align: center; padding: 8px;">
                         💬 Связаться
-                    </button>
-                </div>
+                     </a>
+                {% endif %}
             </div>
             {% endfor %}
         </div>

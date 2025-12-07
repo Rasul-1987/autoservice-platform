@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Чат с {{ interlocutor.username }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e9ecef;">
+        <div>
+            <h1 style="margin: 0 0 5px 0; color: #333; font-size: 24px;">
+                {% if user_type == 'client' %}
+                    🏢 Чат с автосервисом: {{ interlocutor.username }}
+                {% else %}
+                    👤 Чат с клиентом: {{ interlocutor.username }}
+                {% endif %}
+            </h1>
+            {% if chat_room.repair_request %}
+                <div style="color: #666; font-size: 14px;">
+                    📋 По заявке: {{ chat_room.repair_request.title }}
+                </div>
+            {% endif %}
+        </div>
+        <a href="{% url 'chat:chat_list' %}" class="btn btn-secondary">← Назад к чатам</a>
+    </div>
+
+    <div id="chat-messages"
+         style="height: 500px; overflow-y: auto; padding: 20px;
+                background: #f8f9fa; border-radius: 10px; margin-bottom: 20px;
+                display: flex; flex-direction: column; gap: 10px;">
+
+        {% for message in messages %}
+        <div style="max-width: 70%; padding: 12px 16px; border-radius: 15px;
+                   {% if message.sender == user %}
+                       align-self: flex-end;
+                       background: #667eea;
+                       color: white;
+                       border-bottom-right-radius: 5px;
+                   {% else %}
+                       align-self: flex-start;
+                       background: white;
+                       color: #333;
+                       border-bottom-left-radius: 5px;
+                       border: 1px solid #e9ecef;
+                   {% endif %}">
+            <div style="font-size: 14px; margin-bottom: 5px;
+                       {% if message.sender == user %}color: rgba(255,255,255,0.9){% endif %}">
+                {% if message.sender == user %}
+                    ✍️ Вы
+                {% else %}
+                    {% if message.is_sender_client %}
+                        👤 Клиент
+                    {% else %}
+                        🏢 Автосервис
+                    {% endif %}
+                {% endif %}
+                <span style="font-size: 11px; opacity: 0.8; margin-left: 10px;">
+                    {{ message.timestamp|date:"H:i" }}
+                </span>
+            </div>
+            <div>{{ message.content }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <form id="message-form" method="post" action="{% url 'chat:send_message' chat_room.id %}"
+          style="display: flex; gap: 10px;">
+        {% csrf_token %}
+        <input type="text" name="content" id="message-input"
+               placeholder="Введите сообщение..."
+               style="flex: 1; padding: 12px 15px; border: 1px solid #ddd;
+                      border-radius: 25px; font-size: 16px; outline: none;
+                      transition: border-color 0.3s;">
+        <button type="submit" class="btn btn-primary" style="padding: 12px 25px;">
+            📨 Отправить
+        </button>
+    </form>
+</div>
+
+<script>
+    // Автопрокрутка к последнему сообщению
+    const chatMessages = document.getElementById('chat-messages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Отправка формы AJAX
+    document.getElementById('message-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const form = this;
+        const messageInput = document.getElementById('message-input');
+        const message = messageInput.value.trim();
+
+        if (!message) return;
+
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Добавляем новое сообщение в чат
+                const messageDiv = document.createElement('div');
+                messageDiv.style.cssText = 'max-width: 70%; padding: 12px 16px; border-radius: 15px; align-self: flex-end; background: #667eea; color: white; border-bottom-right-radius: 5px;';
+                messageDiv.innerHTML = `
+                    <div style="font-size: 14px; margin-bottom: 5px; color: rgba(255,255,255,0.9);">
+                        ✍️ Вы
+                        <span style="font-size: 11px; opacity: 0.8; margin-left: 10px;">${data.timestamp}</span>
+                    </div>
+                    <div>${data.content}</div>
+                `;
+                chatMessages.appendChild(messageDiv);
+
+                // Обновляем lastMessageId
+                lastMessageId = data.message_id;
+
+                // Очищаем поле ввода
+                messageInput.value = '';
+
+                // Прокручиваем к новому сообщению
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Обновляем счетчик непрочитанных в навигации
+                if (data.total_unread !== undefined) {
+                    updateNotificationBadge(data.total_unread);
+                }
+            }
+        })
+        .catch(error => console.error('Ошибка:', error));
+    });
+
+    // Функция для проверки новых сообщений
+    let lastMessageId = {{ last_message_id|default:0 }};
+
+    function checkNewMessages() {
+        if (lastMessageId) {
+            fetch(`/chat/{{ chat_room.id }}/get-new/${lastMessageId}/`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Ошибка сети');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.messages && data.messages.length > 0) {
+                        data.messages.forEach(msg => {
+                            const messageDiv = document.createElement('div');
+
+                            // Определяем, кто отправитель (клиент или автосервис)
+                            let senderIcon = '';
+                            let senderName = '';
+                            let isOwnMessage = msg.is_own;
+
+                            // Определяем тип отправителя по имени (простая проверка)
+                            // В реальном проекте лучше передавать тип отправителя с сервера
+                            if (msg.is_own) {
+                                senderIcon = '✍️';
+                                senderName = 'Вы';
+                            } else {
+                                // Проверяем по user_type, который есть в контексте
+                                {% if user_type == 'client' %}
+                                    // Если текущий пользователь - клиент, то отправитель - автосервис
+                                    senderIcon = '🏢';
+                                    senderName = 'Автосервис';
+                                {% else %}
+                                    // Если текущий пользователь - автосервис, то отправитель - клиент
+                                    senderIcon = '👤';
+                                    senderName = 'Клиент';
+                                {% endif %}
+                            }
+
+                            messageDiv.style.cssText = isOwnMessage ?
+                                'max-width: 70%; padding: 12px 16px; border-radius: 15px; align-self: flex-end; background: #667eea; color: white; border-bottom-right-radius: 5px;' :
+                                'max-width: 70%; padding: 12px 16px; border-radius: 15px; align-self: flex-start; background: white; color: #333; border-bottom-left-radius: 5px; border: 1px solid #e9ecef;';
+
+                            messageDiv.innerHTML = `
+                                <div style="font-size: 14px; margin-bottom: 5px; ${isOwnMessage ? 'color: rgba(255,255,255,0.9);' : ''}">
+                                    ${senderIcon} ${senderName}
+                                    <span style="font-size: 11px; opacity: 0.8; margin-left: 10px;">${msg.timestamp}</span>
+                                </div>
+                                <div>${msg.content}</div>
+                            `;
+                            chatMessages.appendChild(messageDiv);
+
+                            lastMessageId = Math.max(lastMessageId, msg.id);
+                        });
+
+                        // Прокручиваем к новым сообщениям
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при получении сообщений:', error);
+                });
+        }
+
+        // Проверяем каждые 5 секунд
+        setTimeout(checkNewMessages, 5000);
+    }
+
+    // Запускаем проверку новых сообщений (только если lastMessageId > 0)
+    if (lastMessageId > 0) {
+        setTimeout(checkNewMessages, 5000);
+    }
+
+    // Функция для обновления бейджа уведомлений
+    function updateNotificationBadge(count) {
+        let badge = document.querySelector('.notification-badge');
+        let link = document.querySelector('a[href="{% url 'chat:chat_list' %}"]');
+
+        if (count > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'notification-badge';
+                link.appendChild(badge);
+            }
+            badge.textContent = count;
+        } else if (badge) {
+            badge.remove();
+        }
+}
+</script>
+{% endblock %}
